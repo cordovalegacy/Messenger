@@ -66,6 +66,18 @@ module.exports = {
 
     logoutUser: (req, res) => {
         res.clearCookie('userToken').json({message: "Logged out"})
+    },
+
+    getAllUsers: (req, res) => {
+        UserModel
+            .find()
+            .then((allUsers) => {
+                res.status(200).json(allUsers)
+            })    
+            .catch((err) => {
+                console.log("Error Found In Get All: ", err)
+                res.status(400).json(err)
+            })
     }
 
 }
