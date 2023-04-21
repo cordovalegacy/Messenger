@@ -1,0 +1,9 @@
+.App {
+  text-align: center;
+  height: 100vh;
+  border: 2px solid red;
+}
+
+.height-screen{
+  height: calc(100vh - 67px);
+}
