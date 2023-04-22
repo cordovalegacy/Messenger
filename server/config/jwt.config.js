@@ -12,6 +12,7 @@ module.exports.authenticate = (req, res, next) => {
         else{
             console.log("Authenticated")
             console.log("This is the payload: ", payload)
+            req.jwtpayload = payload;
             next()
         }
     })

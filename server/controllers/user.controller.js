@@ -50,8 +50,8 @@ module.exports = {
                     //log the user in
                     res.status(201).cookie('userToken', userToken, { httpOnly: true, maxAge: 2 * 60 * 60 * 1000 }).json(user)
                 }
-                else{ //passwords don't match but email does
-                    res.status(400).json({message: "Invalid email/password combination"})
+                else { //passwords don't match but email does
+                    res.status(400).json({ message: "Invalid email/password combination" })
                 }
             }
             //if user does not exist
@@ -65,7 +65,21 @@ module.exports = {
     },
 
     logoutUser: (req, res) => {
-        res.clearCookie('userToken').json({message: "Logged out"})
+        res.clearCookie('userToken').json({ message: "Logged out" })
+    },
+
+    getLoggedInUser: (req, res) => {
+        //we added to the req object the payload from the jwt config file
+        UserModel.findOne({ _id: req.jwtpayload._id })
+            .then((user) => {
+                console.log(user);
+                res.status(200).json(user)
+            })
+            .catch((err) => {
+                console.log("Get Logged In User: ", err);
+                res.status(400).json(err)
+            })
+
     },
 
     getAllUsers: (req, res) => {
@@ -73,7 +87,7 @@ module.exports = {
             .find()
             .then((allUsers) => {
                 res.status(200).json(allUsers)
-            })    
+            })
             .catch((err) => {
                 console.log("Error Found In Get All: ", err)
                 res.status(400).json(err)

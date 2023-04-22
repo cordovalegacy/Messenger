@@ -1,46 +1,113 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios'
 import io from 'socket.io-client';
 
 const Chat = () => {
-    const [socket, setSocket] = useState(null);
-    const [message, setMessage] = useState('');
+    const [socket, setSocket] = useState(null); //socket object
+    const [allConversations, setAllConversations] = useState([])
+    const [openConversation, setOpenConversation] = useState({})
     const [messages, setMessages] = useState([]);
-    const [userId, setUserId] = useState(null)
-
-
-    useEffect(() => {
-        const newSocket = io('http://localhost:8000');
-        setSocket(newSocket);
-
-        return () => newSocket.close();
-    }, []);
+    const [message, setMessage] = useState("")
+    const [user, setUser] = useState({})
+    const [allUsers, setAllUsers] = useState([])
+    const [conversationId, setConversationId] = useState("")
 
     useEffect(() => {
-        if (!socket) return;
+        const fetchConversation = async () => {
+            try {
+                const response = await axios.get(`http://localhost:8000/api/messagesInOneConversation/${conversationId}`)
+                setOpenConversation(response.data) //should get back conversation by _id
+                setMessages(response.data.messages) //should get back all messages in said conversation
+            }
+            catch (err) {
+                console.log("Something went wrong fetching conversation: ", err)
+            }
+        }
+        fetchConversation()
+    }, [conversationId]) //listening for conversationId value change (triggers new axios call)
 
-        socket.on('connect', () => {
-            console.log('Connected!');
-        })
+    useEffect(() => {
+        const newSocket = io('http://localhost:8000') //io holds server url in server.js (connection point*)
+        setSocket(newSocket)
 
-        socket.on('event_to_all_other_clients', (data) => {
-            setMessages((messages) => [...messages, data]);
+        return () => newSocket.disconnect(true) //clean up function
+    }, [])
+
+    useEffect(() => {
+        if (!socket) {//if no socket connection, stop searching for one
+            return
+        }
+        //otherwise*
+        socket.on('message', (message) => { //connect
+            setMessages((messages) => [...messages, message]); //gives us messages to display
         });
-
         return () => {
-            socket.disconnect(true)
-        };
-    }, [socket]);
+            socket.disconnect(true) //clean up function
+        }
+    }, [socket]) //listening for socket value change
+
+    useEffect(() => {
+        axios
+            .get('http://localhost:8000/api/getLoggedInUser', { withCredentials: true })
+            .then((res) => {
+                console.log("Logged In User: (chat) ", res.data)
+                setUser(res.data)
+            })
+            .catch((err) => {
+                console.log("Something went wrong: (Logged in user) ", err)
+            })
+    }, [])
+
+    useEffect(() => {
+        axios
+            .get('http://localhost:8000/api/getAllUsers')
+            .then((res) => {
+                console.log("Here are all the users: ", res.data)
+                const allButLoggedInUser = res.data.filter((users) => users._id !== user._id)
+                setAllUsers(allButLoggedInUser)
+            })
+            .catch((err) => {
+                console.log("Something went wrong getting all users: ", err)
+            })
+    }, [user])
+
+
+    useEffect(() => {
+        axios
+            .get('http://localhost:8000/api/allConversations')
+            .then((res) => {
+                console.log("All Conversations: ", res.data)
+                setAllConversations(res.data)
+            })
+            .catch((err) => {
+                console.log("Something went wrong: (all conversations)", err)
+            })
+    }, [])
+
+    const handleCreateConversation = async (userIds) => {
+        try {
+            console.log(userIds)
+            const response = await axios.post('http://localhost:8000/api/newConversation', { users: userIds }, {withCredentials:true})
+            const newConversation = response.data
+            console.log("New Conversation Created: ", newConversation)
+            setOpenConversation(newConversation)
+            setConversationId(response.data._id)
+        }
+        catch (err) {
+            console.log("Something went wrong in creating a conversation: ", err)
+        }
+    }
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        socket.emit('event_from_client', { content: message, sender: userId });
+        socket.emit('message', { content: message, sender: userId });
         setMessage('');
     };
 
     return (
-        <div className="flex-column h-screen bg-gray-900">
-            <div className="w-100 mx-10 my-auto p-4 rounded-lg">
-                <div className="bg-gray-800 rounded-lg px-10 py-4 mb-6">
+        <div className="flex h-screen bg-gray-900">
+            <div className="w-3/5 mx-10 p-4 rounded-lg">
+                <div className="bg-gray-800 rounded-lg px-10 py-4 my-6">
                     <h1 className="font-bold text-blue-500 rounded px-40 w-full">Chat</h1>
                     <ul className="overflow-auto max-h-80 w-full">
                         {messages.map((message, index) => (
@@ -73,6 +140,19 @@ const Chat = () => {
                         </button>
                     </div>
                 </form>
+            </div>
+            <div className='flex flex-col gap-2 bg-gray-800 rounded-lg px-10 py-4 my-6'>
+                <h2 className='text-amber-400 font-bold'>Friends</h2>
+                {
+                    allUsers.map((eachUser) => (
+                        <div key={eachUser._id} className='flex justify-between items-center text-white gap-10 hover:bg-gray-900 py-1 px-5 rounded-lg'>
+                            <h3>{eachUser.firstName} {eachUser.lastName}</h3>
+                            <p className='text-lg font-extrabold text-blue-500 cursor-pointer'>
+                                <button onClick={() => handleCreateConversation([user._id, eachUser._id])}>+</button>
+                            </p>
+                        </div>
+                    ))
+                }
             </div>
         </div>
     );

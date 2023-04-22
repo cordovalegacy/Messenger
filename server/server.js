@@ -12,6 +12,8 @@ app.use(cookieParser())
 
 require('./config/mongoose.config')
 require('./routes/user.routes')(app) //user routes
+require('./routes/conversation.routes')(app)
+require('./routes/message.routes')(app)
 
 // start up the server listening
 const server = app.listen(PORT, () => console.log(`Server Running on PORT: ${PORT}`))
