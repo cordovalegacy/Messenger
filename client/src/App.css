@@ -6,3 +6,7 @@
 .height-screen{
   height: calc(100vh);
 }
+
+ul.overflow-auto::-webkit-scrollbar {
+  display: none;
+}

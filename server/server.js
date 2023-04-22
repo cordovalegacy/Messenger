@@ -6,8 +6,8 @@ const cookieParser = require('cookie-parser')
 require('dotenv').config() //will allow us to store PORT variable in .env file
 const PORT = process.env.PORT //will be stored in .env
 
-app.use(express.json(), express.urlencoded({ extended:true })) //json middleware
-app.use(cors({credentials:true, origin:true}))
+app.use(express.json(), express.urlencoded({ extended: true })) //json middleware
+app.use(cors({ credentials: true, origin: true }))
 app.use(cookieParser())
 
 require('./config/mongoose.config')
@@ -31,18 +31,19 @@ const io = socket_io(server, {
 //start listening for someone to try and connect to our socket
 io.on("connection", (socket) => {
     console.log("Server Socket Id: ", socket.id)
-    
+
     // *****************this is how to add listeners for desired usecase*******************
-    // //LISTENER #1 (conversations)
-    // socket.on('add_new_conversation', (data) => {
-    //     console.log("Started new conversation: ", data)
-    //     // Send out a message with the data for the new conversation
-    //     socket.broadcast.emit('add_convo', data)
-    // })
-    
-    //LISTENER #2 (chat bubbles)
+
+    //LISTENER #1 (chat bubbles)
     socket.on('message', (chatId) => {
         console.log("New Chat Bubble: ", chatId)
-        io.emit('message_other_clients', {sender: chatId.sender, content: chatId.content, timestamp: chatId.timestamp})
+        io.emit('message_other_clients', {
+            sender: {
+                _id: chatId.sender._id,
+                firstName: chatId.sender.firstName,
+            },
+            content: chatId.content, 
+            updatedAt: chatId.updatedAt
+        })
     })
 })

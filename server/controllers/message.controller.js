@@ -14,10 +14,11 @@ module.exports = {
             const message = new MessageModel({ conversation: conversationId, sender, content })
             await message.save() //saves valid message object to database
 
+            const populatedMessage = await MessageModel.findOne({ _id: message._id }).populate('sender', 'firstName')
             //adds the newly created message document to the messages array of the conversation model
-            conversation.messages.push(message)
+            conversation.messages.push(populatedMessage)
             await conversation.save()
-            res.status(201).json(message) //successful operation
+            res.status(201).json(populatedMessage) //successful operation
         }
         catch (err) {
             return res.status(500).json({message: `Something went wrong trying to create message: ${err}`})
