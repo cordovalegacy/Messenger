@@ -21,7 +21,7 @@ const Nav = () => {
         }
 
     return(
-        <nav className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-500 p-1 flex justify-evenly">
+        <nav className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-500 p-1 flex justify-around">
             <Link to={'/chat'} className="text-amber-400 hover:text-amber-500 text-lg font-bold p-5">Chat</Link>
             <div className="flex">
             <Link to={'/login'} className="text-amber-400 hover:text-amber-500 text-lg font-bold p-5">Login</Link>

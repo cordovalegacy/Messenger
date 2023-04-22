@@ -140,16 +140,20 @@ const Chat = () => {
 
     return (
         <div className="flex h-screen bg-gray-900">
-            <div className="w-3/5 mx-10 p-4 rounded-lg">
-                <div className="bg-gray-800 rounded-lg px-10 py-4 my-6">
-                    <h1 className="text-blue-500 rounded px-40 w-full mb-6 font-extrabold text-lg">Chat</h1>
+            <div className="w-3/5 mx-10 rounded-lg">
+                <div className="bg-gray-800 rounded-lg px-10 py-10 my-6">
+                    <h1 className="text-blue-500 px-40 w-full mb-2 p-1 font-extrabold text-lg border-b">Chat</h1>
                     <ul className="overflow-auto max-h-60 w-full">
                         {messages.map((singleMessage, idx) => (
-                            <li key={idx} className={`flex my-2 ${singleMessage.sender._id !== user._id ? 'flex-row-reverse' : ''}`}>
-                                <div className={`bg-slate-700 px-12 border py-3 rounded-3xl ${singleMessage.sender._id === user._id ? 'ml-5' : 'mr-5'}`}>
+                            <li key={idx} className={`flex my-2 ${singleMessage.sender._id === user._id ? 'flex-row-reverse' : ''}`}>
+                                <div className={`bg-slate-700 px-20 border py-3 rounded-3xl ${singleMessage.sender._id === user._id ? 'ml-5' : 'mr-5'}`}>
                                     <div className="flex flex-col">
                                         <div className="text-gray-100 font-bold">{singleMessage.sender.firstName}</div>
-                                        <div className="text-gray-400 text-xs align-self-end">{singleMessage.updatedAt}</div>
+                                        <div className="text-gray-400 text-xs align-self-end">
+                                            {new Date(singleMessage.updatedAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+                                            {' '}
+                                            {new Date(singleMessage.updatedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                                        </div>
                                     </div>
                                     <hr />
                                     <div className="mt-2 text-blue-500">{singleMessage.content}</div>
@@ -177,12 +181,12 @@ const Chat = () => {
                 <h2 className='text-amber-400 font-bold'>Friends</h2>
                 {
                     allUsers.map((eachUser) => (
-                        <div 
-                        key={eachUser._id} 
-                        onClick={() => handleCreateConversation([user._id, eachUser._id])} 
-                        className='flex justify-between items-center text-white gap-10 hover:bg-gray-900 py-1 px-5 rounded-lg cursor-pointer'>
+                        <div
+                            key={eachUser._id}
+                            onClick={() => handleCreateConversation([user._id, eachUser._id])}
+                            className='flex justify-between items-center text-white gap-10 hover:bg-gray-900 py-1 px-5 rounded-lg cursor-pointer'>
                             <h3>{eachUser.firstName} {eachUser.lastName}</h3>
-                                <button className='text-lg font-extrabold text-blue-500 cur'>+</button>
+                            <button className='text-lg font-extrabold text-blue-500 cur'>+</button>
                         </div>
                     ))
                 }
