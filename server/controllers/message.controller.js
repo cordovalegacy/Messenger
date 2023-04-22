@@ -35,11 +35,11 @@ module.exports = {
                 }
             })
             console.log("Get Messages In Convo: ", conversation)
-            if(!conversation){ //if the conversation doesn't come through
-                return res.status(404).json({message: "Conversation was not found"}) //return an error status code
+            if(conversation){ //if the conversation doesn't come through
+                return res.status(200).json(conversation) //returns message array in conversation model instance (hover over json argument for more info)
             }
             //otherwise...
-            return res.status(200).json(conversation.messages) //returns message array in conversation model instance (hover over json argument for more info)
+            return res.status(404).json({message: "Conversation was not found"}) //return an error status code
         }
         catch(err){
             return res.status(500).json({message: `Something went wrong getting messages in conversation: ${err}`})

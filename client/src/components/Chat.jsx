@@ -16,6 +16,7 @@ const Chat = () => {
         const fetchConversation = async () => {
             try {
                 const response = await axios.get(`http://localhost:8000/api/messagesInOneConversation/${conversationId}`)
+                console.log("This conversation: ", response.data)
                 setOpenConversation(response.data) //should get back conversation by _id
                 setMessages(response.data.messages) //should get back all messages in said conversation
             }
@@ -38,7 +39,7 @@ const Chat = () => {
             return
         }
         //otherwise*
-        socket.on('message', (message) => { //connect
+        socket.on('message_other_clients', (message) => { //connect => message is from io.emit object in server.js
             setMessages((messages) => [...messages, message]); //gives us messages to display
         });
         return () => {
@@ -87,7 +88,7 @@ const Chat = () => {
     const handleCreateConversation = async (userIds) => {
         try {
             console.log(userIds)
-            const response = await axios.post('http://localhost:8000/api/newConversation', { users: userIds }, {withCredentials:true})
+            const response = await axios.post('http://localhost:8000/api/newConversation', { users: userIds }, { withCredentials: true })
             const newConversation = response.data
             console.log("New Conversation Created: ", newConversation)
             setOpenConversation(newConversation)
@@ -100,8 +101,17 @@ const Chat = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        socket.emit('message', { content: message, sender: userId });
-        setMessage('');
+        const newMessage = { conversationId: openConversation._id, sender: user._id, content: message }
+        axios
+            .post('http://localhost:8000/api/newMessage', newMessage, { withCredentials: true })
+            .then((res) => {
+                console.log("New Message Created: ", res.data)
+                socket.emit('message', { sender: res.data.sender, content: res.data.content, timestamp: res.data.createdAt });
+                setMessage('');
+            })
+            .catch((err) => {
+                console.log("Something went wrong with message creation: ", err)
+            })
     };
 
     return (
@@ -111,16 +121,27 @@ const Chat = () => {
                     <h1 className="font-bold text-blue-500 rounded px-40 w-full">Chat</h1>
                     <ul className="overflow-auto max-h-80 w-full">
                         {messages.map((message, index) => (
-                            <li key={index} className={`mb-4 ${message.sender === userId ? 'self-end' : 'self-start'}`}>
-                                <div className={`flex items-start ${message.sender === userId ? 'flex-row-reverse' : ''}`}>
-                                    <div className={`bg-slate-700 p-5 rounded-3xl ${message.sender === userId ? 'mr-5' : 'ml-5'}`}>
-                                        <span className="text-gray-100 font-bold">{message.sender}</span>
-                                        <span className="text-gray-400 text-xs ml-2 align-self-end">
-                                            {new Date(message.timestamp).toLocaleString()}
-                                        </span>
-                                        <hr />
-                                        <div className="mt-2 text-blue-500">{message.content}</div>
-                                    </div>
+                            <li key={index} className={`mb-4 w-1/2 ${message.sender !== user._id ? 'self-end' : 'self-start'}`}>
+                                <div className={`bg-slate-700 p-5 rounded-3xl ${message.sender === user._id ? 'ml-5' : 'mr-5'}`}>
+                                    {message.sender === user._id ? (
+                                        <>
+                                            <span className="text-gray-100 font-bold">You</span>
+                                            <span className="text-gray-400 text-xs ml-2 align-self-end">
+                                                {message.timestamp}
+                                            </span>
+                                            <hr />
+                                            <div className="mt-2 text-blue-500">{message.content}</div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="text-gray-100 font-bold">{message.sender.firstName}</span>
+                                            <span className="text-gray-400 text-xs ml-2 align-self-end">
+                                                {message.timestamp}
+                                            </span>
+                                            <hr />
+                                            <div className="mt-2 text-blue-500">{message.content}</div>
+                                        </>
+                                    )}
                                 </div>
                             </li>
                         ))}

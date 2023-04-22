@@ -33,16 +33,16 @@ io.on("connection", (socket) => {
     console.log("Server Socket Id: ", socket.id)
     
     // *****************this is how to add listeners for desired usecase*******************
-    //LISTENER #1 (conversations)
-    socket.on('add_new_conversation', (data) => {
-        console.log("Started new conversation: ", data)
-        // Send out a message with the data for the new conversation
-        socket.broadcast.emit('add_convo', data)
-    })
+    // //LISTENER #1 (conversations)
+    // socket.on('add_new_conversation', (data) => {
+    //     console.log("Started new conversation: ", data)
+    //     // Send out a message with the data for the new conversation
+    //     socket.broadcast.emit('add_convo', data)
+    // })
     
     //LISTENER #2 (chat bubbles)
-    socket.on('new_chat', (chatId) => {
+    socket.on('message', (chatId) => {
         console.log("New Chat Bubble: ", chatId)
-        socket.broadcast.emit('add_chat_bubble', chatId)
+        io.emit('message_other_clients', {sender: chatId.sender, content: chatId.content, timestamp: chatId.timestamp})
     })
 })
