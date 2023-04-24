@@ -167,7 +167,7 @@ const Chat = () => {
             <div className="w-3/5 mx-10 rounded-lg">
                 <div className="bg-gray-800 rounded-lg px-10 py-10 my-6">
                     <h1 className="text-blue-500 px-40 w-full mb-2 p-1 font-extrabold text-lg border-b">Chat</h1>
-                    <ul className="overflow-auto max-h-60 w-full">
+                    <ul className="overflow-auto max-h-60 min-h-60 w-full">
                         {
                             loaded === false ?
                                 <div className="relative">
@@ -201,8 +201,7 @@ const Chat = () => {
                         }
                     </ul>
                 </div>
-                <form onSubmit={handleSubmit}>
-                    <div className="flex bg-gray-800 rounded-lg p-2 mb-6">
+                <form onSubmit={handleSubmit} className='max-h-20 min-h-20 flex bg-gray-800 rounded-lg p-2 mb-6'>       
                         <input
                             type="text"
                             placeholder="Enter message"
@@ -217,10 +216,9 @@ const Chat = () => {
                         >
                             Send
                         </button>
-                    </div>
                 </form>
             </div>
-            <div className='flex flex-col gap-2 bg-gray-800 rounded-lg px-10 py-4 my-6 max-h-80 overflow-auto'>
+            <div className='flex flex-col gap-2 bg-gray-800 rounded-lg px-10 py-4 my-6 h-100 max-h-100 min-h-100 overflow-auto'>
                 <h2 className='text-amber-400 font-bold'>Friends</h2>
                 {
                     allUsers.map((eachUser) => (
