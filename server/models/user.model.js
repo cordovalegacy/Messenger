@@ -20,6 +20,10 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: [true, "Please enter a password"],
         minLength: [8, "Password must be at least 8 characters"]
+    },
+    conversation: {
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Conversation'
     }
 }, {timestamps:true})
 

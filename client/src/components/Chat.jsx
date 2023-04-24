@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios'
 import io from 'socket.io-client';
+import { MyContext } from '../App';
+import GIF from '../assets/gif-bg.gif'
 
 const Chat = () => {
 
     //listened for* = useEffect dependency array
-
-    const [user, setUser] = useState({}) //logged in user
+    const { user, setUser, redirect } = useContext(MyContext) //logged in user getter and setter
     const [allUsers, setAllUsers] = useState([]) //used for conditional rendering
     const [allConversations, setAllConversations] = useState([]) //not used yet, just for console data
     const [openConversation, setOpenConversation] = useState({}) //fetchConvo gets conversation, set to that convo
@@ -14,6 +15,7 @@ const Chat = () => {
     const [message, setMessage] = useState("") //tracking input change
     const [messages, setMessages] = useState([]); //map these to chat window
     const [socket, setSocket] = useState(null); //socket object (listened for*)
+    const [loaded, setLoaded] = useState(false)
 
 
 
@@ -28,6 +30,7 @@ const Chat = () => {
             })
             .catch((err) => {
                 console.log("Something went wrong: (Logged in user) ", err)
+                redirect('/login')
             })
     }, [])
 
@@ -50,7 +53,7 @@ const Chat = () => {
         axios
             .get('http://localhost:8000/api/allConversations')
             .then((res) => {
-                // console.log("All Conversations: ", res.data)
+                console.log("All Conversations: ", res.data)
                 setAllConversations(res.data)
             })
             .catch((err) => {
@@ -69,6 +72,7 @@ const Chat = () => {
             const newConversation = response.data
             console.log("New Conversation Created: ", newConversation)
             setConversationId(newConversation._id)
+            setLoaded(true)
         }
         catch (err) {
             console.log("Something went wrong in creating a conversation: ", err)
@@ -139,27 +143,36 @@ const Chat = () => {
 
 
     return (
-        <div className="flex h-screen bg-gray-900">
+        <div className="flex h-full bg-gray-900">
             <div className="w-3/5 mx-10 rounded-lg">
                 <div className="bg-gray-800 rounded-lg px-10 py-10 my-6">
                     <h1 className="text-blue-500 px-40 w-full mb-2 p-1 font-extrabold text-lg border-b">Chat</h1>
                     <ul className="overflow-auto max-h-60 w-full">
-                        {messages.map((singleMessage, idx) => (
-                            <li key={idx} className={`flex my-2 ${singleMessage.sender._id === user._id ? 'flex-row-reverse' : ''}`}>
-                                <div className={`bg-slate-700 px-20 border py-3 rounded-3xl ${singleMessage.sender._id === user._id ? 'ml-5' : 'mr-5'}`}>
-                                    <div className="flex flex-col">
-                                        <div className="text-gray-100 font-bold">{singleMessage.sender.firstName}</div>
-                                        <div className="text-gray-400 text-xs align-self-end">
-                                            {new Date(singleMessage.updatedAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
-                                            {' '}
-                                            {new Date(singleMessage.updatedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                        {
+                            loaded === false ?
+                                <div className="relative">
+                                    <img src={GIF} alt='gif' className='w-1/3 m-auto' />
+                                    <p className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-center">Start a new chat!</p>
+                                </div> :
+
+                                messages.map((singleMessage, idx) => (
+                                    <li key={idx} className={`flex my-2 ${singleMessage.sender._id === user._id ? 'flex-row-reverse' : ''}`}>
+                                        <div className={`bg-slate-700 px-20 border py-3 rounded-3xl ${singleMessage.sender._id === user._id ? 'ml-5' : 'mr-5'}`}>
+                                            <div className="flex flex-col">
+                                                <div className="text-gray-100 font-bold">{singleMessage.sender.firstName}</div>
+                                                <div className="text-gray-400 text-xs align-self-end">
+                                                    {new Date(singleMessage.updatedAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+                                                    {' '}
+                                                    {new Date(singleMessage.updatedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                                                </div>
+                                            </div>
+                                            <hr />
+                                            <div className="mt-2 text-blue-500">{singleMessage.content}</div>
                                         </div>
-                                    </div>
-                                    <hr />
-                                    <div className="mt-2 text-blue-500">{singleMessage.content}</div>
-                                </div>
-                            </li>
-                        ))}
+                                    </li>
+                                ))
+
+                        }
                     </ul>
                 </div>
                 <form onSubmit={handleSubmit}>
@@ -171,13 +184,17 @@ const Chat = () => {
                             onChange={(e) => setMessage(e.target.value)}
                             className="bg-gray-700 text-amber-200 rounded-full py-2 px-4 w-full focus:outline-blue-700 placeholder-amber-400 font-bold"
                         />
-                        <button type="submit" className="bg-blue-600 hover:bg-blue-500 text-amber-400 font-bold rounded-full py-2 px-4 ml-2">
+                        <button
+                            type="submit"
+                            className={`bg-blue-600 hover:bg-blue-500 text-amber-400 font-bold rounded-full py-2 px-4 ml-2 ${loaded ? '' : 'opacity-50 cursor-not-allowed'}`}
+                            disabled={!loaded}
+                        >
                             Send
                         </button>
                     </div>
                 </form>
             </div>
-            <div className='flex flex-col gap-2 bg-gray-800 rounded-lg px-10 py-4 my-6'>
+            <div className='flex flex-col gap-2 bg-gray-800 rounded-lg px-10 py-4 my-6 max-h-80 overflow-auto'>
                 <h2 className='text-amber-400 font-bold'>Friends</h2>
                 {
                     allUsers.map((eachUser) => (
