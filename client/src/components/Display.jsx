@@ -22,7 +22,7 @@ const Display = () => {
 
     return (
         <div
-            className="bg-cover bg-center h-screen flex flex-col items-center justify-center bg-gray-800"
+            className="bg-contain bg-center h-screen bg-no-repeat flex flex-col items-center justify-center bg-gray-800"
             style={{ backgroundImage: `url(${GIF})` }}
         >
             <div className="bg-inherit px-4 flex flex-col items-center mb-40">

@@ -45,5 +45,16 @@ module.exports = {
         catch(err){
             return res.status(500).json({message: `Something went wrong getting messages in conversation: ${err}`})
         }
+    },
+
+    deleteMessage: (req, res) => {
+        MessageModel.deleteOne({_id: req.params.id})
+        .then(() => {
+            console.log("Successfully deleted your Message")
+            res.status(204).send() //no content status code, send success
+        })
+        .catch((err) => {
+            res.status(400).json(err)
+        })
     }
 }

@@ -10,7 +10,8 @@ const MessageSchema = new mongoose.Schema({
         ref: 'User',
     },
     content: {
-        type: String
+        type: String,
+        required: [true, "Please write a message to send"]
     }
 }, {timestamps: true})
 

@@ -3,6 +3,7 @@ import axios from 'axios'
 import io from 'socket.io-client';
 import { MyContext } from '../App';
 import GIF from '../assets/gif-bg.gif'
+import TRASH from '../assets/icons8-trash.svg'
 
 const Chat = () => {
 
@@ -15,7 +16,7 @@ const Chat = () => {
     const [message, setMessage] = useState("") //tracking input change
     const [messages, setMessages] = useState([]); //map these to chat window
     const [socket, setSocket] = useState(null); //socket object (listened for*)
-    const [loaded, setLoaded] = useState(false)
+    const [loaded, setLoaded] = useState(false) //conditional gif
 
 
 
@@ -140,7 +141,26 @@ const Chat = () => {
         }
     }, [socket]) //listening for socket value change
     // ****************************************Three Above Work Together**************************************
+    //**********************************************Delete Message********************************************
 
+    const deleteHandler = (messageFromChat) => {
+        if (messageFromChat.sender._id == user._id) {
+            const id = messageFromChat._id
+            axios
+                .delete(`http://localhost:8000/api/deleteMessage/${id}`, { withCredentials: true })
+                .then((res) => {
+                    console.log("Deleted Message: ", res)
+                    const deleteMessage = messages.filter((allOtherMessages) => allOtherMessages._id !== messageFromChat._id)
+                    setMessages(deleteMessage)
+                })
+                .catch((err) => {
+                    console.log("Something went wrong: ", err)
+                })
+        }
+        else {
+            console.log("Try again", messageFromChat)
+        }
+    }
 
     return (
         <div className="flex h-full bg-gray-900">
@@ -156,7 +176,13 @@ const Chat = () => {
                                 </div> :
 
                                 messages.map((singleMessage, idx) => (
-                                    <li key={idx} className={`flex my-2 ${singleMessage.sender._id === user._id ? 'flex-row-reverse' : ''}`}>
+                                    <li key={idx} className={`flex my-2 relative ${singleMessage.sender._id === user._id ? 'flex-row-reverse' : ''}`}>
+                                        <img
+                                            src={TRASH}
+                                            alt="delete icon"
+                                            className={`absolute cursor-pointer top-1 right-2 w-6 ${singleMessage.sender._id != user._id ? 'hidden' : 'hover:opacity-100'} opacity-0 transition-opacity`}
+                                            onClick={() => deleteHandler(singleMessage)}
+                                        />
                                         <div className={`bg-slate-700 px-20 border py-3 rounded-3xl ${singleMessage.sender._id === user._id ? 'ml-5' : 'mr-5'}`}>
                                             <div className="flex flex-col">
                                                 <div className="text-gray-100 font-bold">{singleMessage.sender.firstName}</div>
