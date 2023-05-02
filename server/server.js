@@ -1,10 +1,11 @@
 const express = require('express')
 const app = express()
-const socket_io = require('socket.io')
+// const socket_io = require('socket.io')
+const { Server } = require('socket.io') //change
 const cors = require('cors')
 const cookieParser = require('cookie-parser')
 require('dotenv').config() //will allow us to store PORT variable in .env file
-const PORT = process.env.PORT //will be stored in .env
+const PORT = process.env.PORT || 8000 //will be stored in .env
 
 app.use(express.json(), express.urlencoded({ extended: true })) //json middleware
 app.use(cors({ credentials: true, origin: true }))
@@ -18,8 +19,17 @@ require('./routes/message.routes')(app)
 // start up the server listening
 const server = app.listen(PORT, () => console.log(`Server Running on PORT: ${PORT}`))
 
+// const io = socket_io(server, {
+//     cors: {
+//         origin: true,
+//         methods: ['GET', 'POST'],
+//         allowedHeaders: ['*'],
+//         credentials: true
+//     }
+// })
+
 // Using the Express app server, attach the Socket.io server
-const io = socket_io(server, {
+const io = new Server(server, {
     cors: {
         origin: true,
         methods: ['GET', 'POST'],
@@ -42,7 +52,7 @@ io.on("connection", (socket) => {
                 _id: chatId.sender._id,
                 firstName: chatId.sender.firstName,
             },
-            content: chatId.content, 
+            content: chatId.content,
             updatedAt: chatId.updatedAt
         })
     })
