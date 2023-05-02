@@ -12,7 +12,7 @@ import { AiOutlineCloseCircle } from 'react-icons/ai'
 const Chat = () => {
 
     //listened for* = useEffect dependency array
-    const chatEndRef = useRef(null)
+    const chatEndRef = useRef(null) //used for dummy div message snap feature
     const { user, setUser, redirect } = useContext(MyContext) //logged in user getter and setter
     const [allUsers, setAllUsers] = useState([]) //used for conditional rendering
     const [allConversations, setAllConversations] = useState([]) //not used yet, just for console data
@@ -22,7 +22,17 @@ const Chat = () => {
     const [messages, setMessages] = useState([]); //map these to chat window
     const [socket, setSocket] = useState(null); //socket object (listened for*)
     const [loaded, setLoaded] = useState(false) //conditional gif
+
+    // ****************************************GIPHY SDK*******************************************
+    // ! giphy init
+
     const gf = new GiphyFetch("D4w43tSgcv54X84AJ44UtMkrTX45oS2x") //allows us access to giphy api with api key from env file
+    const [showGifs, setShowGifs] = useState(false) //toggle gifs with gif button on search bar
+    const [searchQuery, setSearchQuery] = useState(""); //gif search
+
+
+    // ! Actually grabs the gifs from the api
+
     const fetchGifs = (offset, number) => {
         if (searchQuery) {
             return gf.search(searchQuery, { offset, limit: 20 });
@@ -30,11 +40,6 @@ const Chat = () => {
             return gf.trending({ offset, limit: 20 });
         }
     }; //api search params
-    const [showGifs, setShowGifs] = useState(false) //toggle gifs with gif button on search bar
-    const [searchQuery, setSearchQuery] = useState(""); //gif search
-
-
-
 
     // ****************************************Get Logged In User*******************************************
     // ! Gets our logged in user for conditionally rendering friends list
@@ -180,19 +185,19 @@ const Chat = () => {
 
     //**********************************************Snap to Bottom********************************************
 
-    useEffect(() => {
+    useEffect(() => { //snap feature
         if (messages.length > 0) { //if there are messages..
             chatEndRef.current.scrollIntoView({ behavior: 'smooth' }) //perform chat snap (scrollIntoView is a method of the DOM element like classList, querySelector, addEventListner, etc.)
         }
-    }, [messages]) //listen for new messages
+    }, [messages]) // listen for new messages
 
     useEffect(() => {
-        const fetchGiphy = async () => {
-            const { data } = await fetchGifs(0, 20); // fetch the first 10 search results
-            setGiphyResults(data);
+        const fetchGiphy = async () => { // a function that actually fetches the gifs from the api
+            const { data } = await fetchGifs(0, 20); // fetch the first 20 search results with a zero offset
+            setGiphyResults(data); // our state that will map out the gifs in the gif <Grid /> component
         };
 
-        fetchGiphy();
+        fetchGiphy(); // calls the function each time the dependency array triggers
     }, [searchQuery]);
 
 
@@ -228,13 +233,19 @@ const Chat = () => {
                                                 </div>
                                             </div>
                                             <hr />
-                                            <div className="mt-2 text-blue-500">{singleMessage.content}</div>
+                                            {singleMessage.content.startsWith('http') ?
+                                                <img
+                                                    src={singleMessage.content}
+                                                    alt='gif'
+                                                    onLoad={() => chatEndRef.current.scrollIntoView({ behavior: 'smooth' })}
+                                                /> :
+                                                <div className="mt-2 text-blue-500">{singleMessage.content}</div>
+                                            }
                                         </div>
                                     </li>
                                 ))
                         }
 
-                        <div ref={chatEndRef} className='chat-window'></div>
 
                         {showGifs && loaded ? (
                             <div className="fixed top-0 left-0 z-50 w-screen h-screen bg-gray-900 bg-opacity-80 flex flex-col items-center justify-center p-10">
@@ -249,7 +260,7 @@ const Chat = () => {
                                 </div>
                                 <div className='overflow-auto absolute top-40 left-60 max-h-60' style={{ overflowY: scroll }}>
                                     <Grid
-                                        className="bg-gray-600 py-5 rounded-2xl"
+                                        className="bg-gray-600"
                                         key={searchQuery}
                                         width={600}
                                         columns={5}
@@ -258,24 +269,35 @@ const Chat = () => {
                                         fetchGifs={fetchGifs}
                                         hideAttribution={true}
                                         onGifClick={(gif, e) => {
-                                            e.preventDefault();
-                                            setGif(gif);
-                                            setShowGifs(false);
+                                            e.preventDefault()
+                                            setShowGifs(false)
+                                            setMessage(gif.images.fixed_width_small.url)
                                         }}
                                     />
                                 </div>
                             </div>
                         ) : null}
+                        <div ref={chatEndRef} className='chat-window'></div>
                     </ul>
                 </div>
                 <form onSubmit={handleSubmit} className='max-h-20 min-h-20 flex items-center gap-5 bg-gray-800 rounded-lg p-2 mb-6'>
-                    <input
-                        type="text"
-                        placeholder="Enter message"
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        className="bg-gray-700 text-amber-200 rounded-full py-2 px-4 w-full focus:outline-blue-700 placeholder-amber-400 font-bold flex-2"
-                    />
+                    {message.startsWith('http') ?
+                        <input
+                            type="text"
+                            placeholder="Enter message"
+                            value={message}
+                            onChange={(e) => setMessage(e.target.value)}
+                            className="bg-gray-700 text-red-200 rounded-full py-2 px-4 w-full focus:outline-blue-700 placeholder-amber-400 font-bold flex-2"
+                            disabled
+                        /> :
+                        <input
+                            type="text"
+                            placeholder="Enter message"
+                            value={message}
+                            onChange={(e) => setMessage(e.target.value)}
+                            className="bg-gray-700 text-amber-200 rounded-full py-2 px-4 w-full focus:outline-blue-700 placeholder-amber-400 font-bold flex-2"
+                        />
+                    }
                     {
                         showGifs === false && loaded ?
                             <BsFiletypeGif className='w-1/6 text-3xl text-white cursor-pointer rounded-3xl' onClick={() => setShowGifs(!showGifs)} /> :
